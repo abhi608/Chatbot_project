@@ -1,0 +1,63 @@
+import sqlite3
+
+
+connect = sqlite3.connect('data.sqlite')
+cur = connect.cursor()
+
+
+flag = 0
+pal = 'Hello'
+li1 = [pal]
+user = ''
+print('Pal: ', pal)
+print('You: ')
+user = input()
+li = [user]
+while user!='bye':
+    cur.execute('SELECT Response FROM sents WHERE Input=?;', li)
+    flag = 0
+    resp = cur.fetchone()
+    if not resp:
+        cur.execute('SELECT rowid FROM sents WHERE Input=?;', li1)
+        d = cur.fetchone()
+        flag = 3
+        if not d:
+            cur.execute('SELECT Input FROM sents WHERE Response IS NULL;')
+            resp = cur.fetchone()
+            flag = 1
+            cur.execute('INSERT INTO sents (Input) VALUES (?);', li)
+            if resp == None:
+                resp = 'Let us change the topic.'
+                flag = 2
+    if flag==0:
+        resp = resp[0]
+        print('Pal: ', resp)
+        li1 = [resp]
+    if flag==3:
+        d = d[0]
+        cur.execute('UPDATE sents SET Response =? WHERE rowid=?', (user, d))
+        cur.execute('SELECT Input FROM sents WHERE Response IS NULL;')
+        resp = cur.fetchone()
+        #cur.execute('INSERT INTO sents (Input) VALUES (?);', li)
+        if resp == None:
+            resp = 'Let us change the topic.'
+            li1 = ['']
+        else:
+            resp = resp[0]
+            li1 = [resp]
+        print('Pal: ', resp)
+    if flag==1:
+        resp = resp[0]
+        print('Pal: ', resp)
+        li1 = [resp]
+    if flag==2:
+        print('Pal: ', resp)
+        li1 = ['']
+    print('You: ')
+    user = input()
+    #print(flag)
+    li = [user]
+    connect.commit()
+    
+connect.close()
+            
