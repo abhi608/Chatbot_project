@@ -1,7 +1,17 @@
+"""Run these commands in the python shell to create the required table. Name of the table is sents and it will have 2 columns(Input,Response)
+1. import sqlite3
+2. connect = sqlite3.connect('data.sqlite')
+3. cur = connect.cursor()
+4. cur.execute('CREATE TABLE sents(Input TEXT, Response TEXT);)
+5. connect.close()
+"""
+
+"""Main code starts from here:"""
+
 import sqlite3
 
 
-connect = sqlite3.connect('data.sqlite')
+connect = sqlite3.connect('data.sqlite')  
 cur = connect.cursor()
 
 
@@ -11,32 +21,32 @@ li1 = [pal]
 user = ''
 print('Pal: ', pal)
 print('You: ')
-user = input()
-li = [user]
-while user!='bye':
-    cur.execute('SELECT Response FROM sents WHERE Input=?;', li)
+user = input()         #takes input from the user
+li = [user]            #stored the input from the user in form of a list
+while user!='bye':     #Chat terminates as soon as user types bye
+    cur.execute('SELECT Response FROM sents WHERE Input=?;', li)  #search for the user input in the Input column of our table sents  
     flag = 0
     resp = cur.fetchone()
-    if not resp:
-        cur.execute('SELECT rowid FROM sents WHERE Input=?;', li1)
+    if not resp:   #if no sentence in the input matches the sentence of the user
+        cur.execute('SELECT rowid FROM sents WHERE Input=?;', li1)   #Now, it can be possible that the user input might be the response of some question which bot has asked to the user. So, search for the bot's last reply in our Input column. 
         d = cur.fetchone()
         flag = 3
-        if not d:
-            cur.execute('SELECT Input FROM sents WHERE Response IS NULL;')
+        if not d:   #if no sentence in the Input matches the last sentence of the bot 
+            cur.execute('SELECT Input FROM sents WHERE Response IS NULL;')  #select some question from the Input column for which there is no response in the bot's database.
             resp = cur.fetchone()
             flag = 1
-            cur.execute('INSERT INTO sents (Input) VALUES (?);', li)
+            cur.execute('INSERT INTO sents (Input) VALUES (?);', li)    #Store the user's current response as an unanswered question in Input column
             if resp == None:
-                resp = 'Let us change the topic.'
+                resp = 'Let us change the topic.'   #if everything fails
                 flag = 2
-    if flag==0:
-        resp = resp[0]
+    if flag==0:   #At this very moment, resp is a tuple
+        resp = resp[0]  
         print('Pal: ', resp)
         li1 = [resp]
     if flag==3:
         d = d[0]
-        cur.execute('UPDATE sents SET Response =? WHERE rowid=?', (user, d))
-        cur.execute('SELECT Input FROM sents WHERE Response IS NULL;')
+        cur.execute('UPDATE sents SET Response =? WHERE rowid=?', (user, d))   #set the user's answer as a response to the last asked question by the bot
+        cur.execute('SELECT Input FROM sents WHERE Response IS NULL;')  #select a new sentence to be delivered
         resp = cur.fetchone()
         #cur.execute('INSERT INTO sents (Input) VALUES (?);', li)
         if resp == None:
