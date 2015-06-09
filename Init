@@ -64,7 +64,7 @@ while user!='bye':     #Chat terminates as soon as user types bye
         print('Pal: ', resp)
         li1 = ['']
     print('You: ')
-    user = input()
+    user = input().lower()
     #print(flag)
     li = [user]
     connect.commit()
