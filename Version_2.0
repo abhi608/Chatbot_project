@@ -1,0 +1,203 @@
+import sqlite3
+import nltk
+
+
+def connectDB():
+    connect = sqlite3.connect('data.sqlite')
+    cur = connect.cursor()
+    return connect, cur
+
+connect, cur = connectDB()
+
+def Noun(word, cur):
+    cur.execute('select rowid from words where noun1 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set noun1=? where rowid=?;',  (word, d[0]))
+        return
+    cur.execute('select rowid from words where noun2 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set noun2=? where rowid=?;',  (word, d[0]))
+        return
+    cur.execute('select rowid from words where noun3 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set noun3=? where rowid=?;',  (word, d[0]))
+        return
+    cur.execute('select rowid from words where noun4 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set noun4=? where rowid=?;',  (word, d[0]))
+        return
+
+
+def Adjective(word,cur):
+    cur.execute('select rowid from words where adj1 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set adj1=? where rowid=?;',  (word, d[0]))
+        return
+    cur.execute('select rowid from words where adj2 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set adj2=? where rowid=?;',  (word, d[0]))
+        return
+    cur.execute('select rowid from words where adj3 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set adj3=? where rowid=?;',  (word, d[0]))
+        return
+
+
+def Modal(word,cur):
+    cur.execute('select rowid from words where modal IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set modal=? where rowid=?;',  (word, d[0]))
+        return
+
+
+def Verb(word,cur):
+    cur.execute('select rowid from words where verb1 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set verb1=? where rowid=?;',  (word, d[0]))
+        return
+
+    cur.execute('select rowid from words where verb2 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set verb2=? where rowid=?;',  (word, d[0]))
+        return
+    cur.execute('select rowid from words where verb3 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set verb3=? where rowid=?;',  (word, d[0]))
+        return
+
+
+
+def wh(word,cur):
+    cur.execute('select rowid from words where wh IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set wh=? where rowid=?',  (word, d[0]))
+        return
+
+
+def Adverb(word,cur):
+    cur.execute('select rowid from words where adv1 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set adv1=? where rowid=?;',  (word, d[0]))
+        return
+
+    cur.execute('select rowid from words where adv2 IS NULL and new = 1;')
+    d = cur.fetchone()
+    if d:
+        cur.execute('update words set adv2=? where rowid=?;',  (word, d[0]))
+        return
+
+    
+
+flag = 0
+pal = 'Hello'
+li1 = [pal]
+user = ''
+print('Pal: ', pal)
+print('You: ')
+user = input()
+li = [user]
+cats = { 'N' : Noun,
+         'J' : Adjective,
+         'M' : Modal,
+         'V' : Verb,
+         'W' : wh,
+         'R' : Adverb,
+         'P' : Noun,
+         }
+i=1resp = resp[0]
+        print('Pal: ', resp)
+
+while (i):
+    cur.execute('SELECT Response FROM sents WHERE Input=?;', li)
+    flag = 0
+    resp = cur.fetchone()
+    if not resp:
+        wordlist = nltk.word_tokenize(user)
+        worddict = nltk.pos_tag(wordlist)
+        worddict = set(worddict)
+        worddict = dict(worddict)
+        wordlist = list(worddict.keys())
+        index = 0
+        cur.execute('insert into words (new) values (1);')      
+        while(index<len(wordlist)):
+              #cur.execute('select rowid from words where new = 1;')
+              #Id = cur.fetchone()
+              #Id = Id[0]
+              word = wordlist[index]
+              char = worddict[word]
+              char = char[0]
+              if char[0] not in cats.keys():
+                  index = index+1
+                  continue
+              cats[char](word, cur)
+              index = index+1
+        connect.commit()
+        #cur.execute('select * from words where rowid = 2')
+        cur.execute('select rowid from words where new=1;')
+        m = cur.fetchone()
+        m = m[0]
+
+
+
+
+
+        cur.execute('update words set new = ? where rowid=?', (0, m))
+        connect.commit()
+        i = 0
+
+        '''cur.execute('SELECT rowid FROM sents WHERE Input=?;', li1)
+        d = cur.fetchone()
+        flag = 3
+        if not d:
+            cur.execute('SELECT Input FROM sents WHERE Response IS NULL;')
+            resp = cur.fetchone()
+            flag = 1
+            cur.execute('INSERT INTO sents (Input) VALUES (?);', li)
+            if resp == None:
+                resp = 'Let us change the topic.'
+                flag = 2
+    if flag==0:
+                li1 = [resp]
+    if flag==3:
+        d = d[0]
+        cur.execute('UPDATE sents SET Response =? WHERE rowid=?', (user, d))
+        cur.execute('SELECT Input FROM sents WHERE Response IS NULL;')
+        resp = cur.fetchone()
+        #cur.execute('INSERT INTO sents (Input) VALUES (?);', li)
+        if resp == None:
+            resp = 'Let us change the topic.'
+            li1 = ['']
+        else:
+            resp = resp[0]
+            li1 = [resp]
+        print('Pal: ', resp)
+    if flag==1:
+        resp = resp[0]
+        print('Pal: ', resp)
+        li1 = [resp]
+    if flag==2:
+        print('Pal: ', resp)
+        li1 = ['']
+    print('You: ')
+    user = input().lower()
+    #print(flag)
+    li = [user]
+    connect.commit()'''
+    
+connect.close()
+            
+
+
